@@ -28,10 +28,10 @@ Claude Code will pick up any directory containing a `SKILL.md` file automaticall
 
 ```bash
 # Project-level (available in this repo only)
-git clone https://github.com/<your-org>/df-skills.git .agents/skills/df-skills
+git clone https://github.com/shameedjob/df-skills.git .agents/skills/df-skills
 
 # User-level (available across all projects)
-git clone https://github.com/<your-org>/df-skills.git ~/.agents/skills/df-skills
+git clone https://github.com/shameedjob/df-skills.git ~/.agents/skills/df-skills
 ```
 
 Codex CLI discovers any directory containing a `SKILL.md` file automatically. If a newly installed skill doesn't show up, restart Codex.
