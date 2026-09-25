@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=11; IE=10; IE=9; IE=EDGE" />
+<meta charset="UTF-8">
+
+<title>AI DF Designer Preview</title>
+
+<link href="system.css" rel="stylesheet"/>
+<link href="theme.css" rel="stylesheet"/>
+<link href="application.css" rel="stylesheet"/>
+
+<!-- Previewer things -->
+<script src="WebAppDesigner-min.js"></script>
+<script>
+window.oPreviewer = new df.Designer("previewer");
+function load_preview(){
+    oPreviewer.preview("",
+        %%VIEW_OBJECT%%, 0, %%JSON_OBJECT%%
+    );
+} 
+
+load_preview();load_preview();
+</script>
+<link href="WebAppDesigner.css" rel="stylesheet" type="text/css" />
+
+<base id="previewer_base" href="">
+</head>
+
+<body>
+  <div id="previewer">
+    <div id="viewport" style="width: 100%; height: 100%;">
+
+    </div>
+
+    <div id="previewer_error" style="display: none;"></div>
+    <div id="previewer_message" style="display: none;"></div>
+    <div id="previewer_logcount"></div>
+  </div>
+</body>
+</html>

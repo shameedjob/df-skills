@@ -7,6 +7,7 @@ Utility skills to help agents operate on DataFlex source files.
 | Skill | Description |
 | --- | --- |
 | [df-outline](df-outline/SKILL.md) | Outlines a DataFlex file to enable more performant parsing over DataFlex files. |
+| [df-designer-preview](df-designer-preview/SKILL.md) | Renders a DataFlex web view in the WebApp designer for design review. Uses df-outline's script, so install both. |
 
 ## Installation
 
