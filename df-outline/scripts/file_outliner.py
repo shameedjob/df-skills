@@ -27,6 +27,8 @@ class StructNode:
 open_blocks = set(['object', 'function', 'procedure', 'class'])
 close_blocks = set(['end_object', 'end_function', 'end_procedure', 'end_class', 'cd_end_object'])
 use_command = 'use'
+macro_start = '#command'
+macro_end = '#endcommand'
 
 
 @lru_cache(maxsize=None)
@@ -51,10 +53,17 @@ def open_source(file_path:str)->io.StringIO:
 def compress_file(file_path:str)->list[StructNode]:
     stack = []
     page = []
+    in_macro = False
     with open_source(file_path) as file:
         for line_num, line in enumerate(file.readlines(), start=1):
             working_line = line.strip().split()
             if len(working_line) < 1: continue
+            # #COMMAND macro bodies are templates (e.g. `Object !1 is a !2`), not blocks of this file
+            if working_line[0].lower() == macro_start:
+                in_macro = True
+            if in_macro:
+                in_macro = working_line[0].lower() != macro_end
+                continue
             if working_line[0].lower() in open_blocks:
                 new_struct = StructNode(working_line[1], working_line[0], line_num, 0)
                 if len(stack):
