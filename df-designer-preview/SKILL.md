@@ -1,7 +1,9 @@
 ---
 name: df-designer-preview
-description: "Renders a DataFlex web view (.wo/.vw) in the DataFlex WebApp designer so its layout can be reviewed without running the application. Use when the user asks to preview or review the design of a web view, or to (re)build the design previewer."
+description: "Renders a DataFlex web view (.wo/.vw) in the DataFlex WebApp designer so its layout can be reviewed without the DataFlex client or running the application. Use when the user asks to preview or review the design of a web view, or to (re)build the design previewer."
 ---
+
+Use this skill to review the design of a web view without interacting with the DataFlex client: the view's source is turned into a static page that the user opens in a browser. When the preview is generated, finish by reporting the link to the new page (see [Report the link](#report-the-link)).
 
 The previewer is a copy of the DataFlex `WebUI_Designer` folder kept in a cache folder (the "bundle"). It is built once, and each view review then regenerates only the page and the application's CSS inside it.
 
@@ -36,7 +38,7 @@ This replaces the bundle with a fresh copy of `<AppHtml>/WebUI_Designer`, adds `
   python scripts/build_designer.py preview -f VIEW_FILE [-b BASE_JSON] [-c CONSTANTS_JSON]
 ```
 
-This copies the current `theme.css` and `application.css` into the bundle again, then writes the view's preview as the bundle's `WebAppDesigner.html` and prints that page's path. Give that path to the user to open in a browser.
+This copies the current `theme.css` and `application.css` into the bundle again, then writes the view's preview as the bundle's `WebAppDesigner.html` and prints a `file://` link to that page.
 
 Used files are searched for in the view's own folder and the saved search folders. If the web classes cannot be found there, the preview will be empty: check the saved folders with `status`.
 
@@ -47,6 +49,16 @@ Used files are searched for in the view's own folder and the saved search folder
 `preview` exits with an error if the bundle has not been built; build it first as above.
 
 `bundle` also accepts the `preview` options `-f`, `-b`, and `-c` to build and preview in one call.
+
+## Report the link
+
+Once `preview` (or `bundle -f ...`) succeeds, the last line it prints is the `file://` link to the generated page, e.g.
+
+```
+file:///Users/me/.cache/df-skills/designer-preview/bundle/WebAppDesigner.html
+```
+
+End by giving the user that link so they can open the preview in a browser. If the command failed instead, report the error rather than a link.
 
 ## Cache location
 

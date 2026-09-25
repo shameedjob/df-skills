@@ -402,7 +402,7 @@ if __name__ == '__main__':
             if args.constants:
                 with open(args.constants, 'r') as f:
                     constants = {name.lower(): value for name, value in json.load(f).items()}
-            print(make_preview(args.file, getattr(args, 'extra_search_dirs', None), base, constants))
+            print(Path(make_preview(args.file, getattr(args, 'extra_search_dirs', None), base, constants)).as_uri())
     except (FileNotFoundError, ValueError) as error:
         print(f'error: {error}', file=sys.stderr)
         sys.exit(2)
