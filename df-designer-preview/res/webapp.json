@@ -1,0 +1,54 @@
+{
+    "aClasses": [
+        {
+            "sType": "df.WebApp",
+            "hClassId": 0,
+            "props": {
+                "pbDragDropEnabled": "1",
+                "pbEnabled": "1",
+                "pbIsMobile": "0",
+                "pbRender": "1",
+                "pbResponsive": "1",
+                "pbServerOnOrientationChange": "0",
+                "pbServerOnResizeWindow": "0",
+                "pbServerOnSystemThemePreferenceChange": "0",
+                "pbUpdateApplicationTitle": "1",
+                "pbVisible": "1",
+                "peAlignView": "0",
+                "peMode": "-1",
+                "peSystemThemePreference": "0",
+                "peThemePreference": "0",
+                "piBrowserTimezoneOffset": "0",
+                "piScreenHeight": "0",
+                "piScreenWidth": "0",
+                "piWindowHeight": "0",
+                "piWindowWidth": "0",
+                "psApplicationTitle": "DataFlex WebApp",
+                "psBackgroundColor": "",
+                "psBodyCSSClass": "",
+                "psClientOnOrientationChange": "",
+                "psClientOnRender": "",
+                "psClientOnResizeWindow": "",
+                "psClientOnSystemThemePreferenceChange": "",
+                "psCSSClass": "",
+                "psDateTimeFormat": "",
+                "psHtmlId": "",
+                "psLocationHash": "",
+                "psTextColor": "",
+                "psTheme": "Df_Material",
+                "psTimeFormat": "hh:mm:ss",
+                "psTimeSeparator": ":",
+                "psVersionID": "1.0.52"
+            }
+        }
+    ],
+    "obj": {
+        "sName": "oWebApp",
+        "hClassId": 0,
+        "props": {
+            "psApplicationTitle": "Web Preview",
+            "psTheme": "Df_Material",
+            "peAlignView": "1"
+        }
+    }
+}

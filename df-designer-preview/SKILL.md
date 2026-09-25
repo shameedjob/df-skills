@@ -3,7 +3,7 @@ name: df-designer-preview
 description: "Renders a DataFlex web view (.wo/.vw) in the DataFlex WebApp designer so its layout can be reviewed without the DataFlex client or running the application. Use when the user asks to preview or review the design of a web view, or to (re)build the design previewer."
 ---
 
-Use this skill to review the design of a web view without interacting with the DataFlex client: the view's source is turned into a static page that the user opens in a browser. When the preview is generated, finish by reporting the link to the new page (see [Report the link](#report-the-link)).
+Use this skill to review the design of a web view without interacting with the DataFlex client: the view's source is turned into a static page that the user opens in a browser. When the preview is generated, finish by reporting the link to the new page (see [Report the link](#report-the-link)). If any step fails, tell the user instead (see [When the skill fails](#when-the-skill-fails)).
 
 The previewer is a copy of the DataFlex `WebUI_Designer` folder kept in a cache folder (the "bundle"). It is built once, and each view review then regenerates only the page and the application's CSS inside it.
 
@@ -43,7 +43,7 @@ This copies the current `theme.css` and `application.css` into the bundle again,
 Used files are searched for in the view's own folder and the saved search folders. If the web classes cannot be found there, the preview will be empty: check the saved folders with `status`.
 
 - `-I` (repeatable): an extra folder to search in this run only; it is not saved.
-- `-b`: an existing designer output JSON whose `oWebApp` object and `df.WebApp` class are kept as they are.
+- `-b`: an existing designer output JSON whose `oWebApp` object and `df.WebApp` class are copied as they are. Without it, they come from `res/webapp.json`.
 - `-c`: a JSON file mapping DataFlex constants to their values, e.g. `{"prLeft": "1"}`. Unmapped constants are written out by name.
 
 `preview` exits with an error if the bundle has not been built; build it first as above.
@@ -58,7 +58,29 @@ Once `preview` (or `bundle -f ...`) succeeds, the last line it prints is the `fi
 file:///Users/me/.cache/df-skills/designer-preview/bundle/WebAppDesigner.html
 ```
 
-End by giving the user that link so they can open the preview in a browser. If the command failed instead, report the error rather than a link.
+End by giving the user that link so they can open the preview in a browser. Only give the link when the command succeeded.
+
+## When the skill fails
+
+A command has failed when it exits with a non-zero code, prints a line starting with `error:`, or prints a Python traceback. When that happens:
+
+1. Stop. Do not give the user a preview link, even one from an earlier run: the page in the bundle is out of date or missing.
+2. Tell the user that the preview could not be generated, which command failed, and the error message as printed.
+3. Say what is most likely wrong and what would fix it, using the table below. If the fix needs a path, ask the user for it rather than guessing.
+4. Do not work around the failure by editing the bundle, writing the HTML or JSON by hand, or changing the saved config without the user's say.
+
+| Error | Likely cause | Fix |
+| --- | --- | --- |
+| `missing paths ... : <keys>` | `bundle` was run without those paths and they are not saved yet | Ask the user for the listed paths and rerun `bundle` with them |
+| `theme.css not found`, `application.css not found` | The saved CSS path moved or was mistyped | Ask the user for the current path and rerun `bundle --theme ...` / `--application-css ...` |
+| `WebUI_Designer folder not found`, `system.css not found` | `--apphtml` does not point at the DataFlex `AppHtml` folder | Ask the user for the `AppHtml` folder and rerun `bundle --apphtml ...` |
+| `search folder not found` | A folder given with `-I` does not exist | Ask the user for the correct folder and rerun `bundle -I ...` with every search folder |
+| `no preview bundle ... run the bundle command first` | The bundle was never built, or its config is from an older version | Run `status`, ask for any missing paths, and run `bundle` |
+| `no web objects found in <file>` | The view's classes could not be traced to `cWebObject`, usually because the DataFlex `Pkg` folder or a workspace source folder is not among the search folders | Show the user the search folders from the message, ask which folder is missing, and rerun `bundle -I ...` with the full list |
+| `No such file or directory: <view file>` | The view path is wrong | Confirm the view file with the user |
+| A Python traceback | A bug in the script, or source it cannot parse | Report the last lines of the traceback and the view file; do not retry with guessed changes |
+
+A preview can also succeed but look wrong, for example missing controls or showing constant names such as `prLeft` where numbers are expected. If the user reports this, or the command output suggests it, say what is missing and point to the likely cause: a class whose file is not in the search folders, or a constant that needs a `-c` constants file.
 
 ## Cache location
 

@@ -1,8 +1,10 @@
 import argparse
+import copy
 import json
 import os
 from pathlib import Path
 import random
+import re
 import shutil
 import sys
 
@@ -13,10 +15,14 @@ sys.path.insert(0, os.path.normpath(DF_OUTLINE_SCRIPTS))
 
 import file_outliner
 
+# letters, digits, and underscores (DataFlex names such as oOrder_DD use underscores)
+OBJECT_NAME = re.compile(r'[A-Za-z0-9_]+')
+
 def get_web_objects(file:str, search_dirs:list[str]|None=None, super_class:str='cWebObject')->dict:
     """Returns the hierarchy of Objects in file whose class path reaches super_class.
 
-    Objects that are not web objects are left out along with everything nested in them.
+    Objects that are not web objects, or whose names are not plain identifiers (such as the
+    `Object !1 is a !2` placeholders in #COMMAND macros), are left out along with everything nested in them.
     Other blocks (Procedures, Functions, Classes) are looked through for Objects.
     """
     super_class = super_class.lower()
@@ -34,6 +40,8 @@ def get_web_objects(file:str, search_dirs:list[str]|None=None, super_class:str='
         for node in nodes:
             if node.block_type.lower() != 'object':
                 objects.extend(collect(node.children))
+                continue
+            if not OBJECT_NAME.fullmatch(node.block_name):
                 continue
             web, superclass = is_web(node)
             if web:
@@ -182,18 +190,28 @@ def get_designer_class(file:str, line:int, search_dirs:list[str]|None=None,
     props = {names[key]: to_designer_value(values[key], constants) for key in names if is_web[key]}
     return to_designer_value(js_class), dict(sorted(props.items(), key=lambda item: item[0].lower()))
 
+WEB_APP_DEFAULTS = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'res', 'webapp.json')
+
+def load_web_app_defaults()->dict:
+    """The df.WebApp class and oWebApp object used when no base output provides them."""
+    with open(WEB_APP_DEFAULTS, 'r') as f:
+        return json.load(f)
+
+def find_web_app_class(output:dict|None)->dict|None:
+    return next((c for c in (output or {}).get('aClasses', []) if c.get('sType') == 'df.WebApp'), None)
+
 def build_designer_output(file:str, search_dirs:list[str]|None=None, base:dict|None=None,
                           constants:dict[str, str]|None=None)->dict:
     """Builds the designer output for the web objects in file.
 
-    base is an existing output whose df.WebApp class and oWebApp root object are kept as they are;
-    the file's top level web objects become the children of oWebApp. constants maps DataFlex
-    constant names (lowercased) to the values written out for them.
+    The df.WebApp class and oWebApp root object are copied with their props unchanged from base
+    (an existing output), falling back to res/webapp.json for whichever base does not have; the
+    file's top level web objects become the children of oWebApp. constants maps DataFlex constant
+    names (lowercased) to the values written out for them.
     """
-    web_app_class = next((c for c in (base or {}).get('aClasses', []) if c['sType'] == 'df.WebApp'),
-                         {'sType': 'df.WebApp', 'props': {}})
-    web_app = (base or {}).get('obj') or {'sName': 'oWebApp', 'props': {}}
-    classes = {'df.WebApp': {**web_app_class, 'hClassId': 0}}
+    web_app_class = find_web_app_class(base) or find_web_app_class(load_web_app_defaults())
+    web_app = (base or {}).get('obj') or load_web_app_defaults()['obj']
+    classes = {'df.WebApp': {'sType': 'df.WebApp', 'hClassId': 0, 'props': copy.deepcopy(web_app_class['props'])}}
 
     used_handles = {web_app['iCdsNodeHandle']} if 'iCdsNodeHandle' in web_app else set()
     def new_handle()->str:
@@ -227,9 +245,10 @@ def build_designer_output(file:str, search_dirs:list[str]|None=None, base:dict|N
         }
 
     root = {
-        **web_app,
+        'sName': web_app.get('sName', 'oWebApp'),
         'hClassId': 0,
         'iCdsNodeHandle': web_app.get('iCdsNodeHandle') or new_handle(),
+        'props': copy.deepcopy(web_app.get('props', {})),
         'aObjs': [child for child in map(build, get_web_objects(file, search_dirs)['objects']) if child],
     }
     return {'aClasses': list(classes.values()), 'obj': root}
@@ -258,6 +277,9 @@ def build_preview_html(file:str, search_dirs:list[str]|None=None, base:dict|None
         html = f.read()
     view_name = get_view_name(file) or Path(file).stem
     output = build_designer_output(file, search_dirs, base, constants)
+    if not output['obj']['aObjs']:
+        raise ValueError(f'no web objects found in {file}; the classes it uses could not be traced to '
+                         f'cWebObject in the search folders: {search_dirs}')
     html = (html.replace('%%VIEW_OBJECT%%', to_script_literal(view_name))
                 .replace('%%JSON_OBJECT%%', to_script_literal(output)))
 
