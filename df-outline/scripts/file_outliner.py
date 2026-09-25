@@ -1,6 +1,7 @@
 
 import argparse
 import csv
+import io
 from dataclasses import asdict, dataclass, field
 from functools import lru_cache
 import json
@@ -29,10 +30,28 @@ use_command = 'use'
 
 
 @lru_cache(maxsize=None)
+def read_source(file_path:str)->str:
+    """Returns the text of a DataFlex source file.
+
+    Source files are often saved in the Windows ANSI code page rather than UTF-8, so UTF-8 is tried
+    first and cp1252 used otherwise; bytes invalid in both are replaced rather than raising.
+    """
+    with open(file_path, 'rb') as file:
+        data = file.read()
+    try:
+        return data.decode('utf-8-sig')
+    except UnicodeDecodeError:
+        return data.decode('cp1252', errors='replace')
+
+def open_source(file_path:str)->io.StringIO:
+    """Opens a DataFlex source file for reading as text; see read_source."""
+    return io.StringIO(read_source(file_path), newline=None)
+
+@lru_cache(maxsize=None)
 def compress_file(file_path:str)->list[StructNode]:
     stack = []
     page = []
-    with open(file_path, 'r') as file:
+    with open_source(file_path) as file:
         for line_num, line in enumerate(file.readlines(), start=1):
             working_line = line.strip().split()
             if len(working_line) < 1: continue
@@ -50,7 +69,7 @@ def compress_file(file_path:str)->list[StructNode]:
 
 def get_inheritance(file_path:str)->list[str]:
     inherited = []
-    with open(file_path, 'r') as file:
+    with open_source(file_path) as file:
         while (line:=file.readline()):
             args = line.strip().split()
             if len(args) >= 2:
@@ -101,7 +120,7 @@ def resolve_use(name:str, file_index:dict[str, str])->str|None:
     return file_index.get(name)
 
 def get_superclass(file:str, line:int)->str:
-    with open(file, 'r') as f:
+    with open_source(file) as f:
         for line_num, text in enumerate(f, start=1):
             if line_num == line:
                 args = text.strip().lower().split()
@@ -109,7 +128,7 @@ def get_superclass(file:str, line:int)->str:
     return ''
 
 def find_class_line(file:str, class_name:str)->int:
-    with open(file, 'r') as f:
+    with open_source(file) as f:
         for line_num, line in enumerate(f, start=1):
             args = line.strip().lower().split()
             if len(args) >= 2 and args[0] == 'class' and args[1] == class_name:
@@ -122,7 +141,7 @@ def get_class_path(file:str, line:int, stop_class:str|None=None, search_dirs:lis
     Returns [(class, file), ...]; the last entry has file None if its definition was not found.
     """
     file_index = build_file_index(tuple(search_dirs or [os.path.dirname(os.path.abspath(file))]))
-    with open(file, 'r') as f:
+    with open_source(file) as f:
         args = f.readlines()[line-1].strip().split()
     path = [(args[1] if len(args) > 1 else '', file)]
     stop_class = stop_class.lower() if stop_class else None
@@ -207,7 +226,7 @@ def scan_props(file:str, line_start:int=1, line_end:int|None=None)->list[tuple[s
 
     props = []
     flag = False
-    with open(file, 'r') as f:
+    with open_source(file) as f:
         for line_num, line in enumerate(f, start=1):
             if line_num < line_start: continue
             if line_end and line_num > line_end: break

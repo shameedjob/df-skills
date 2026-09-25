@@ -72,7 +72,7 @@ def get_set_values(file:str, node:file_outliner.StructNode)->dict[str, str]:
     skipped = [(c.start_line, c.end_line) for c in node.children]
 
     values = {}
-    with open(file, 'r') as f:
+    with file_outliner.open_source(file) as f:
         for line_num, line in enumerate(f, start=1):
             if line_num <= node.start_line: continue
             if line_num >= node.end_line: break
@@ -194,7 +194,7 @@ WEB_APP_DEFAULTS = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'
 
 def load_web_app_defaults()->dict:
     """The df.WebApp class and oWebApp object used when no base output provides them."""
-    with open(WEB_APP_DEFAULTS, 'r') as f:
+    with open(WEB_APP_DEFAULTS, 'r', encoding='utf-8') as f:
         return json.load(f)
 
 def find_web_app_class(output:dict|None)->dict|None:
@@ -273,7 +273,7 @@ def build_preview_html(file:str, search_dirs:list[str]|None=None, base:dict|None
     The page is written to output_path, or by default to <view name>_preview.html beside the
     template so its relative asset links resolve. Returns the absolute path of the written page.
     """
-    with open(template, 'r') as f:
+    with open(template, 'r', encoding='utf-8') as f:
         html = f.read()
     view_name = get_view_name(file) or Path(file).stem
     output = build_designer_output(file, search_dirs, base, constants)
@@ -284,7 +284,7 @@ def build_preview_html(file:str, search_dirs:list[str]|None=None, base:dict|None
                 .replace('%%JSON_OBJECT%%', to_script_literal(output)))
 
     output_path = os.path.abspath(output_path or os.path.join(os.path.dirname(template), f'{view_name}_preview.html'))
-    with open(output_path, 'w') as f:
+    with open(output_path, 'w', encoding='utf-8') as f:
         f.write(html)
     return output_path
 
@@ -307,14 +307,14 @@ def get_bundle_dir()->str:
 
 def load_config()->dict:
     try:
-        with open(get_config_path(), 'r') as f:
+        with open(get_config_path(), 'r', encoding='utf-8') as f:
             return json.load(f)
     except FileNotFoundError:
         return {}
 
 def save_config(config:dict):
     os.makedirs(get_cache_dir(), exist_ok=True)
-    with open(get_config_path(), 'w') as f:
+    with open(get_config_path(), 'w', encoding='utf-8') as f:
         json.dump(config, f, indent=4)
 
 def require_file(path:str, description:str)->str:
@@ -418,11 +418,11 @@ if __name__ == '__main__':
         if args.file:
             base = None
             if args.base:
-                with open(args.base, 'r') as f:
+                with open(args.base, 'r', encoding='utf-8') as f:
                     base = json.load(f)
             constants = None
             if args.constants:
-                with open(args.constants, 'r') as f:
+                with open(args.constants, 'r', encoding='utf-8') as f:
                     constants = {name.lower(): value for name, value in json.load(f).items()}
             print(Path(make_preview(args.file, getattr(args, 'extra_search_dirs', None), base, constants)).as_uri())
     except (FileNotFoundError, ValueError) as error:
