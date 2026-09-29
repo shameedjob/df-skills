@@ -12,16 +12,6 @@
 
 <!-- Previewer things -->
 <script src="WebAppDesigner-min.js"></script>
-<script>
-window.oPreviewer = new df.Designer("previewer");
-function load_preview(){
-    oPreviewer.preview("",
-        %%VIEW_OBJECT%%, 0, %%JSON_OBJECT%%
-    );
-} 
-
-load_preview();load_preview();
-</script>
 <link href="WebAppDesigner.css" rel="stylesheet" type="text/css" />
 
 <base id="previewer_base" href="">
@@ -37,5 +27,11 @@ load_preview();load_preview();
     <div id="previewer_message" style="display: none;"></div>
     <div id="previewer_logcount"></div>
   </div>
+  <script>
+  // Studio sends the preview message after this body exists. Do the same for
+  // the standalone preview so the designer can populate #viewport.
+  window.oPreviewer = new df.Designer("previewer");
+  oPreviewer.preview("./", %%VIEW_OBJECT%%, 0, %%JSON_OBJECT%%);
+  </script>
 </body>
 </html>

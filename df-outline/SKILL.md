@@ -51,7 +51,7 @@ Object oSalesP_DD @173,180
   python scripts/file_outliner.py structure -f file --json
 ```
 
-The default tree output is significantly cheaper in tokens for the same information and should be preferred. Only fall back to `--json` when you need clearer, machine-structured data (e.g. programmatically parsing the outline) — it costs substantially more tokens for large files, since it repeats keys (`block_name`, `block_type`, `start_line`, `end_line`, `children`) for every node instead of a single compact line. See the [README's benchmark](../README.md#benchmark) for measured numbers.
+The default tree output is significantly cheaper in tokens for the same information and should be preferred. Only fall back to `--json` when you need clearer, machine-structured data (e.g. programmatically parsing the outline) — it costs substantially more tokens for large files, since it repeats keys (`block_name`, `block_type`, `start_line`, `end_line`, `children`) for every node instead of a single compact line. See the [README's benchmark](https://github.com/shameedjob/df-skills#benchmark) for measured numbers.
 
 Afterwards, use an OS-specific command to read just the `start_line`-`end_line` range for the block you need instead of reading the whole file.
 
